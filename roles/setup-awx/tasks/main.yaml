@@ -1,0 +1,66 @@
+- name: install depedency
+  apt:
+    name: '{{ item }}'
+    state: present
+  loop:
+    - ansible
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - software-properties-common
+    - gnupg-agent
+    - unzip
+
+- name: add apt key docker
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: add docker apt respository
+  apt_repository:
+    repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable
+    state: present
+
+- name: install docker & depedency
+  apt:
+    name: '{{ item }}'
+    state: present
+    update_cache: yes
+  loop: 
+    - docker-ce
+    - nodejs
+    - npm
+    - python3-pip
+    - git
+
+- name: add user to docker
+  user:
+    name: '{{ ansible_user }}'
+    group: docker
+    append: yes
+
+- name: install docker compose & request using pip
+  pip:
+    name: '{{ item }}'
+  loop:
+    - requests==2.22.0
+    - docker-compose==1.25.0
+
+- name: download ansible awx
+  get_url:
+    url: https://github.com/ansible/awx/archive/17.1.0.zip
+    dest: '/home/{{ ansible_user }}/17.1.0.zip'
+
+- name: extract awx
+  unarchive: 
+    src: '/home/{{ ansible_user }}/17.1.0.zip'
+    dest: '/home/{{ ansible_user }}'
+    remote_src: yes
+    keep_newer: yes
+
+- name: change password awxsecret
+  lineinfile:
+    path: '/home/{{ ansible_user }}/awx-17.1.0/installer/inventory'
+    regexp: '^# admin_password=password'
+    line: 'admin_password=Admin#123'
+    backup: yes

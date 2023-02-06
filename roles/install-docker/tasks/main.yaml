@@ -1,0 +1,32 @@
+- name: install depedency
+  apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - software-properties-common
+    - gnupg-agent
+
+- name: add apt key docker
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: Add specified repository into sources list
+  apt_repository:
+    repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable
+    state: present
+
+- name: install docker
+  apt:
+    name: docker-ce
+    state: present
+    update_cache: yes
+
+- name: add user to docker group
+  user:
+    name: "{{ ansible_user }}"
+    group: docker
+    append: yes
